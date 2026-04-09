@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashCards — mushu</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5FF;
+    --surface: #FFFFFF;
+    --surface2: #F0EDFF;
+    --primary: #7C6FF7;
+    --primary-dark: #5A51D4;
+    --primary-light: #EAE8FF;
+    --accent: #FF8FAB;
+    --accent2: #FFD166;
+    --text: #1E1A3C;
+    --text2: #6B647F;
+    --text3: #A9A3BF;
+    --border: #E4E0F5;
+    --red: #FF5C7A;
+    --green: #2DCE89;
+    --card-h: 280px;
+    --radius: 18px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  h1,h2,h3,h4,button,.logo-text { font-family: 'Nunito', sans-serif; }
+
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob1 { width: 500px; height: 500px; background: #C4B8FF; top: -200px; left: -150px; }
+  .blob2 { width: 400px; height: 400px; background: #FFB3C8; bottom: -150px; right: -100px; }
+  .blob3 { width: 300px; height: 300px; background: #FFD166; top: 40%; left: 40%; }
+
+  .page { display: none; position: relative; z-index: 1; }
+  .page.active { display: block; }
+
+  /* ─── LOGIN ─── */
+  .login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 28px;
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    animation: fadeUp 0.5s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .login-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .logo-icon {
+    width: 72px; height: 72px;
+    background: var(--primary-light);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .logo-icon::before {
+    content: '';
+    position: absolute;
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #EAE8FF 0%, #D8D2FF 100%);
+  }
+  .logo-icon svg { position: relative; z-index: 1; width: 38px; height: 38px; }
+
+  .logo-text { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+  .logo-text span { color: var(--primary); }
+
+  .login-sub { font-size: 15px; color: var(--text2); text-align: center; }
+
+  .field { margin-bottom: 1.1rem; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-light);
+  }
+
+  .err-box {
+    background: #FFF0F3;
+    border: 1px solid #FFD6DF;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--red);
+    margin-bottom: 1rem;
+    display: none;
+    font-weight: 600;
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+  .btn-login:hover { background: var(--primary-dark); }
+  .btn-login:active { transform: scale(0.98); }
+
+  .login-footer { text-align: center; margin-top: 1.5rem; font-size: 13px; color: var(--text3); }
+
+  /* ─── APP ─── */
+  .app-page { min-height: 100vh; display: flex; flex-direction: column; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo { width: 36px; height: 36px; background: var(--primary-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .topbar-logo svg { width: 20px; height: 20px; }
+  .topbar-title { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+  .topbar-title span { color: var(--primary); }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 6px 14px 6px 8px;
+  }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--primary);
+    color: #fff; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .btn-logout {
+    padding: 7px 16px;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .btn-logout:hover { border-color: var(--red); color: var(--red); background: #FFF5F7; }
+
+  /* ─── MAIN CONTENT ─── */
+  .content { padding: 2rem; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; }
+
+  .welcome-banner {
+    background: var(--primary);
+    border-radius: 20px;
+    padding: 1.75rem 2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .welcome-banner::before {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    top: -80px; right: 80px;
+  }
+  .welcome-banner::after {
+    content: '';
+    position: absolute;
+    width: 150px; height: 150px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+    bottom: -60px; right: 20px;
+  }
+  .welcome-text h2 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .welcome-text p { font-size: 14px; color: rgba(255,255,255,0.75); }
+  .btn-new-set {
+    background: #fff;
+    color: var(--primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 22px;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    white-space: nowrap;
+    font-family: 'Nunito', sans-serif;
+    position: relative; z-index: 1;
+  }
+  .btn-new-set:hover { opacity: 0.9; }
+  .btn-new-set:active { transform: scale(0.97); }
+
+  .section-label {
+    font-size: 12px; font-weight: 700; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+  }
+
+  .sets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .set-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    animation: fadeUp 0.35s ease;
+  }
+  .set-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+  .set-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .set-icon-wrap {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--primary-light);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .set-icon-wrap svg { width: 22px; height: 22px; }
+  .set-count-badge {
+    font-size: 11px; font-weight: 700;
+    background: var(--surface2);
+    color: var(--text2);
+    border-radius: 20px;
+    padding: 3px 9px;
+    border: 1px solid var(--border);
+  }
+  .set-card h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; line-height: 1.3; }
+  .set-card-actions { display: flex; gap: 6px; }
+  .act-btn {
+    flex: 1; padding: 8px 0; border-radius: 8px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'Nunito', sans-serif; border: none; transition: opacity 0.15s;
+  }
+  .act-btn:active { opacity: 0.8; transform: scale(0.97); }
+  .act-study { background: var(--primary); color: #fff; }
+  .act-study:hover { background: var(--primary-dark); }
+  .act-edit { background: var(--surface2); color: var(--primary); }
+  .act-edit:hover { background: var(--primary-light); }
+  .act-del { background: #FFF0F3; color: var(--red); }
+  .act-del:hover { background: #FFE0E7; }
+
+  .empty-wrap {
+    text-align: center;
+    padding: 4rem 1rem;
+    display: none;
+  }
+  .empty-wrap .empty-icon {
+    width: 80px; height: 80px;
+    background: var(--primary-light);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.25rem;
+  }
+  .empty-wrap .empty-icon svg { width: 40px; height: 40px; }
+  .empty-wrap h3 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .empty-wrap p { font-size: 14px; color: var(--text2); margin-bottom: 1.5rem; }
+
+  /* ─── MODAL ─── */
+  .modal-bg {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(30,26,60,0.45);
+    align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .modal-bg.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border-radius: 24px;
+    border: 1.5px solid var(--border);
+    padding: 2rem;
+    width: 100%; max-width: 500px;
+    max-height: 90vh; overflow-y: auto;
+    animation: fadeUp 0.3s ease;
+  }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .modal-header h2 { font-size: 18px; font-weight: 800; color: var(--text); }
+  .modal-close {
+    width: 32px; height: 32px;
+    background: var(--surface2); border: none; border-radius: 8px;
+    cursor: pointer; font-size: 16px; color: var(--text2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: monospace; font-weight: 700;
+  }
+  .modal-close:hover { background: var(--border); }
+
+  .m-field { margin-bottom: 1.1rem; }
+  .m-field label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .m-field input, .m-field textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-family: 'Nunito Sans', sans-serif;
+    background: var(--surface); color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .m-field input:focus, .m-field textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+  .m-field textarea { height: 190px; resize: vertical; line-height: 1.7; }
+  .m-hint { font-size: 11px; color: var(--text3); margin-top: 5px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.25rem; }
+  .btn-cancel {
+    padding: 10px 22px; background: transparent; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+    color: var(--text2); cursor: pointer; font-family: 'Nunito', sans-serif;
+  }
+  .btn-cancel:hover { background: var(--surface2); }
+  .btn-save {
+    padding: 10px 28px; background: var(--primary); border: none;
+    border-radius: var(--radius-sm); font-size: 14px; font-weight: 700;
+    color: #fff; cursor: pointer; font-family: 'Nunito', sans-serif;
+    transition: background 0.2s;
+  }
+  .btn-save:hover { background: var(--primary-dark); }
+
+  /* ─── STUDY MODE ─── */
+  .study-page {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+  .study-topbar {
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .btn-back {
+    padding: 8px 18px;
+    background: var(--surface2);
+    border: none; border-radius: 30px;
+    font-size: 13px; font-weight: 700;
+    color: var(--text2); cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+    transition: background 0.2s;
+  }
+  .btn-back:hover { background: var(--primary-light); color: var(--primary); }
+  .study-set-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .prog-wrap { flex: 1; display: flex; align-items: center; gap: 10px; }
+  .prog-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .prog-inner { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+  .prog-pct { font-size: 13px; font-weight: 700; color: var(--primary); min-width: 40px; text-align: right; }
+
+  .study-content {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+
+  .card-scene {
+    perspective: 1400px;
+    width: 100%; max-width: 560px;
+    height: var(--card-h);
+    cursor: pointer;
+  }
+  .card-body {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+  }
+  .card-body.flipped { transform: rotateY(180deg); }
+
+  .card-side {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    border-radius: 24px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2.5rem;
+    text-align: center;
+  }
+  .card-front {
+    background: var(--surface);
+    border: 2px solid var(--border);
+  }
+  .card-back {
+    background: var(--primary);
+    border: 2px solid var(--primary-dark);
+    transform: rotateY(180deg);
+  }
+
+  .card-pill {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 14px; border-radius: 20px;
+    margin-bottom: 1.25rem;
+  }
+  .card-front .card-pill { background: var(--primary-light); color: var(--primary); }
+  .card-back .card-pill { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); }
+
+  .card-word {
+    font-size: 30px; font-weight: 800; line-height: 1.25; color: var(--text);
+    font-family: 'Nunito', sans-serif;
+  }
+  .card-back .card-word { font-size: 22px; color: #fff; }
+
+  .tap-tip { font-size: 12px; color: var(--text3); margin-top: 14px; font-weight: 600; }
+  .card-back .tap-tip { color: rgba(255,255,255,0.55); }
+
+  .card-controls {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; max-width: 560px;
+  }
+  .ctrl-btn {
+    padding: 10px 24px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    color: var(--text); font-family: 'Nunito', sans-serif;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+  .ctrl-btn:disabled { opacity: 0.3; cursor: default; }
+  .ctrl-counter { flex: 1; text-align: center; font-size: 15px; font-weight: 700; color: var(--text2); }
+  .btn-shuffle {
+    padding: 10px 20px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; color: var(--primary);
+    font-family: 'Nunito', sans-serif;
+    transition: background 0.15s;
+  }
+  .btn-shuffle:hover { background: var(--primary-light); }
+
+  .done-banner {
+    background: var(--green);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    padding: 12px 20px;
+    font-size: 14px; font-weight: 700;
+    text-align: center;
+    display: none;
+    width: 100%; max-width: 560px;
+    animation: fadeUp 0.3s ease;
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+
+<!-- LOGIN PAGE -->
+<div id="page-login" class="page active">
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7C6FF7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3"/>
+            <path d="M8 4v16M2 9h6M2 14h6"/>
+          </svg>
+        </div>
+        <div class="logo-text">Flash<span>Cards</span></div>
+      </div>
+      <p class="login-sub" style="margin-bottom:1.75rem">შედი შენს ანგარიშზე</p>
+      <div class="err-box" id="login-err">იუზერნეიმი ან პაროლი არასწორია</div>
+      <div class="field">
+        <label>იუზერნეიმი</label>
+        <input type="text" id="inp-user" placeholder="შეიყვანე იუზერნეიმი" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>პაროლი</label>
+        <input type="password" id="inp-pass" placeholder="••••••••••••"/>
+      </div>
+      <button class="btn-login" onclick="doLogin()">შესვლა →</button>
+      <div class="login-footer">FlashCards v1.0 · mushu-ს ანგარიში</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP PAGE -->
+<div id="page-app" class="page app-page">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7C6FF7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="3"/>
+          <path d="M8 4v16M2 9h6M2 14h6"/>
+        </svg>
+      </div>
+      <div class="topbar-title">Flash<span>Cards</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="user-avatar">M</div>
+        <span class="user-name">mushu</span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">გასვლა</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="welcome-banner">
+      <div class="welcome-text">
+        <h2>გამარჯობა, mushu! 👋</h2>
+        <p>შენი ნაკრებები მზადაა სასწავლად</p>
+      </div>
+      <button class="btn-new-set" onclick="openModal()">+ ახალი ნაკრები</button>
+    </div>
+    <div class="section-label">ჩემი ნაკრებები</div>
+    <div id="sets-grid" class="sets-grid"></div>
+    <div id="empty-wrap" class="empty-wrap">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7C6FF7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="3"/>
+          <path d="M8 4v16M2 9h6M2 14h6"/>
+        </svg>
+      </div>
+      <h3>ჯერ ნაკრები არ გაქვს</h3>
+      <p>შექმენი პირველი ნაკრები და დაიწყე სწავლა</p>
+      <button class="btn-new-set" style="display:inline-block;padding:12px 28px;border-radius:12px" onclick="openModal()">+ ახალი ნაკრები</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDY PAGE -->
+<div id="page-study" class="page study-page">
+  <div class="study-topbar">
+    <button class="btn-back" onclick="exitStudy()">← უკან</button>
+    <span class="study-set-name" id="study-title"></span>
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-inner" id="prog-inner"></div></div>
+      <span class="prog-pct" id="prog-pct"></span>
+    </div>
+  </div>
+  <div class="study-content">
+    <div class="card-scene" onclick="flipCard()">
+      <div class="card-body" id="card-body">
+        <div class="card-side card-front">
+          <span class="card-pill">სიტყვა</span>
+          <div class="card-word" id="cf-word"></div>
+          <div class="tap-tip">დააჭირე გადასაბრუნებლად</div>
+        </div>
+        <div class="card-side card-back">
+          <span class="card-pill">განმარტება</span>
+          <div class="card-word" id="cb-word"></div>
+          <div class="tap-tip">დააჭირე გადასაბრუნებლად</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-controls">
+      <button class="ctrl-btn" id="btn-prev" onclick="prevCard()">← წინა</button>
+      <span class="ctrl-counter" id="ctrl-counter"></span>
+      <button class="ctrl-btn" id="btn-next" onclick="nextCard()">შემდეგი →</button>
+      <button class="btn-shuffle" onclick="shuffleCards()">⇄ შეარია</button>
+    </div>
+    <div class="done-banner" id="done-banner">ყველა ბარათი გაიარე! კარგად გააკეთე!</div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title">ახალი ნაკრები</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-field">
+      <label>ნაკრების სახელი</label>
+      <input type="text" id="m-name" placeholder="მაგ: ინგლისური — დონე A1"/>
+    </div>
+    <div class="m-field">
+      <label>ბარათები</label>
+      <textarea id="m-cards" placeholder="ყოველ სტრიქონზე ასე:&#10;სიტყვა - განმარტება&#10;&#10;მაგ:&#10;Apple - ვაშლი&#10;House - სახლი&#10;Run - სირბილი&#10;..."></textarea>
+      <div class="m-hint">გამყოფი: " - " (სიტყვა სივრცე dash სივრცე განმარტება) · მაქს. 100 ბარათი</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">გაუქმება</button>
+      <button class="btn-save" onclick="saveSet()">შენახვა</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CREDS = { user: 'mushu', pass: '232569232569' };
+const SK = 'fc_app_v3';
+let sets = [], editIdx = -1, studyCards = [], cardIdx = 0, flipped = false;
+
+function load() {
+  try { const r = localStorage.getItem(SK); if (r) sets = JSON.parse(r); } catch(e) { sets = []; }
+  renderSets();
+}
+function save() { try { localStorage.setItem(SK, JSON.stringify(sets)); } catch(e) {} }
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function doLogin() {
+  const u = document.getElementById('inp-user').value.trim();
+  const p = document.getElementById('inp-pass').value;
+  const err = document.getElementById('login-err');
+  if (u === CREDS.user && p === CREDS.pass) {
+    err.style.display = 'none';
+    showPage('page-app');
+    load();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('inp-pass').value = '';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('page-login').classList.contains('active')) doLogin();
+  }
+});
+
+function doLogout() {
+  showPage('page-login');
+  document.getElementById('inp-user').value = '';
+  document.getElementById('inp-pass').value = '';
+}
+
+function renderSets() {
+  const grid = document.getElementById('sets-grid');
+  const empty = document.getElementById('empty-wrap');
+  if (!sets.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = sets.map((s, i) => `
+    <div class="set-card">
+      <div class="set-card-top">
+        <div class="set-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7C6FF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3"/>
+            <path d="M8 4v16"/>
+          </svg>
+        </div>
+        <span class="set-count-badge">${s.cards.length} ბარათი</span>
+      </div>
+      <h4>${s.name}</h4>
+      <div class="set-card-actions">
+        <button class="act-btn act-study" onclick="startStudy(${i})">სწავლა</button>
+        <button class="act-btn act-edit" onclick="editSet(${i})">რედ.</button>
+        <button class="act-btn act-del" onclick="delSet(${i})">წაშლა</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openModal() {
+  editIdx = -1;
+  document.getElementById('modal-title').textContent = 'ახალი ნაკრები';
+  document.getElementById('m-name').value = '';
+  document.getElementById('m-cards').value = '';
+  document.getElementById('modal-bg').classList.add('open');
+}
+function editSet(i) {
+  editIdx = i;
+  const s = sets[i];
+  document.getElementById('modal-title').textContent = 'ნაკრების რედაქტირება';
+  document.getElementById('m-name').value = s.name;
+  document.getElementById('m-cards').value = s.cards.map(c => c.w + ' - ' + c.d).join('\n');
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+function parseCards(t) {
+  return t.split('\n').map(l => l.trim()).filter(l => l.includes(' - ')).map(l => {
+    const i = l.indexOf(' - ');
+    return { w: l.slice(0, i).trim(), d: l.slice(i + 3).trim() };
+  }).filter(c => c.w && c.d).slice(0, 100);
+}
+
+function saveSet() {
+  const n = document.getElementById('m-name').value.trim();
+  const cards = parseCards(document.getElementById('m-cards').value);
+  if (!n) { alert('შეიყვანე ნაკრების სახელი'); return; }
+  if (!cards.length) { alert('ბარათები ვერ ვიპოვე.\nფორმატი: სიტყვა - განმარტება'); return; }
+  if (editIdx >= 0) sets[editIdx] = { name: n, cards };
+  else sets.push({ name: n, cards });
+  save(); renderSets(); closeModal();
+}
+
+function delSet(i) {
+  if (!confirm('წაიშალოს "' + sets[i].name + '"?')) return;
+  sets.splice(i, 1); save(); renderSets();
+}
+
+function startStudy(i) {
+  i = parseInt(i);
+  if (isNaN(i) || i < 0 || i >= sets.length) { alert('შეცდომა: ნაკრები ვერ ვიპოვე'); return; }
+  studyCards = sets[i].cards.map(c => ({w: c.w, d: c.d}));
+  cardIdx = 0; flipped = false;
+  document.getElementById('study-title').textContent = sets[i].name;
+  document.getElementById('done-banner').style.display = 'none';
+  showPage('page-study');
+  renderCard();
+}
+function exitStudy() { showPage('page-app'); renderSets(); }
+
+function renderCard() {
+  const c = studyCards[cardIdx];
+  document.getElementById('cf-word').textContent = c.w;
+  document.getElementById('cb-word').textContent = c.d;
+  document.getElementById('ctrl-counter').textContent = (cardIdx + 1) + ' / ' + studyCards.length;
+  const pct = Math.round((cardIdx + 1) / studyCards.length * 100);
+  document.getElementById('prog-inner').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  flipped = false;
+  document.getElementById('card-body').classList.remove('flipped');
+  document.getElementById('btn-prev').disabled = cardIdx === 0;
+  document.getElementById('btn-next').disabled = cardIdx === studyCards.length - 1;
+  document.getElementById('done-banner').style.display = 'none';
+}
+
+function flipCard() { flipped = !flipped; document.getElementById('card-body').classList.toggle('flipped', flipped); }
+function nextCard() {
+  if (cardIdx < studyCards.length - 1) { cardIdx++; renderCard(); }
+  else { document.getElementById('done-banner').style.display = 'block'; }
+}
+function prevCard() { if (cardIdx > 0) { cardIdx--; renderCard(); } }
+function shuffleCards() {
+  for (let i = studyCards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [studyCards[i], studyCards[j]] = [studyCards[j], studyCards[i]];
+  }
+  cardIdx = 0; renderCard();
+}
+</script>
+</body>
+</html>
