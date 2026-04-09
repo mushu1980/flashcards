@@ -51,11 +51,25 @@
   .blob3 { width: 300px; height: 300px; background: #FFD166; top: 40%; left: 40%; }
 
   .page { display: none; position: relative; z-index: 1; }
-  .page.active { display: none; }
+ 
+.page { 
+  display: none; 
+  position: relative; 
+  z-index: 1; 
+}
 
 #page-app.active {
   display: block;
 }
+
+#page-login.active {
+  display: flex;
+}
+
+#page-study.active {
+  display: block;
+}
+
 #page-study {
   position: fixed;
   inset: 0;
@@ -63,9 +77,6 @@
   background: #f6f3ff;
   overflow-y: auto;
 }
-#page-study.active {
-  display: flex;
-
 
   /* ─── LOGIN ─── */
   .login-page {
