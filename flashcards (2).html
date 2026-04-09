@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashCards — mushu</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F5FF; --surface: #FFFFFF; --surface2: #F0EDFF;
+  --primary: #7C6FF7; --primary-dark: #5A51D4; --primary-light: #EAE8FF;
+  --text: #1E1A3C; --text2: #6B647F; --text3: #A9A3BF;
+  --border: #E4E0F5; --red: #FF5C7A; --green: #2DCE89;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Nunito Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+h1,h2,h3,h4,button { font-family: 'Nunito', sans-serif; }
+
+.blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.2; pointer-events: none; z-index: 0; }
+.blob1 { width: 500px; height: 500px; background: #C4B8FF; top: -200px; left: -150px; }
+.blob2 { width: 400px; height: 400px; background: #FFB3C8; bottom: -150px; right: -100px; }
+
+.screen { display: none; min-height: 100vh; flex-direction: column; position: relative; z-index: 1; }
+.screen.on { display: flex; }
+
+/* LOGIN */
+#s-login { align-items: center; justify-content: center; padding: 2rem; }
+.lcard { background: var(--surface); border: 1.5px solid var(--border); border-radius: 28px; padding: 3rem 2.5rem; width: 100%; max-width: 400px; animation: up 0.4s ease; }
+@keyframes up { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.lwrap { display:flex; flex-direction:column; align-items:center; margin-bottom:1.75rem; }
+.lbox { width:68px; height:68px; background:var(--primary-light); border-radius:20px; display:flex; align-items:center; justify-content:center; margin-bottom:0.75rem; }
+.lbox svg { width:36px; height:36px; }
+.lname { font-size:24px; font-weight:800; color:var(--text); }
+.lname span { color:var(--primary); }
+.lsub { font-size:14px; color:var(--text2); text-align:center; margin-bottom:1.5rem; }
+.lf { margin-bottom:1rem; }
+.lf label { display:block; font-size:12px; font-weight:700; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em; }
+.lf input { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-size:15px; font-family:'Nunito Sans',sans-serif; background:var(--surface); color:var(--text); transition:border-color 0.2s, box-shadow 0.2s; }
+.lf input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--primary-light); }
+.lerr { background:#FFF0F3; border:1px solid #FFD6DF; border-radius:10px; padding:10px 14px; font-size:13px; color:var(--red); margin-bottom:1rem; display:none; font-weight:600; }
+.lbtn { width:100%; padding:13px; background:var(--primary); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; transition:background 0.2s, transform 0.1s; }
+.lbtn:hover { background:var(--primary-dark); }
+.lbtn:active { transform:scale(0.98); }
+.lfoot { text-align:center; margin-top:1.25rem; font-size:12px; color:var(--text3); }
+
+/* APP */
+.topbar { background:var(--surface); border-bottom:1.5px solid var(--border); padding:0 2rem; height:62px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; flex-shrink:0; }
+.tl { display:flex; align-items:center; gap:10px; }
+.tlogo { width:34px; height:34px; background:var(--primary-light); border-radius:10px; display:flex; align-items:center; justify-content:center; }
+.tlogo svg { width:18px; height:18px; }
+.tname { font-size:17px; font-weight:800; color:var(--text); }
+.tname span { color:var(--primary); }
+.tr { display:flex; align-items:center; gap:10px; }
+.uchip { display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:30px; padding:5px 13px 5px 7px; }
+.uav { width:26px; height:26px; border-radius:50%; background:var(--primary); color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.unm { font-size:13px; font-weight:600; color:var(--text); }
+.obtn { padding:6px 14px; background:transparent; border:1.5px solid var(--border); border-radius:30px; font-size:12px; font-weight:700; color:var(--text2); cursor:pointer; font-family:'Nunito',sans-serif; transition:all 0.2s; }
+.obtn:hover { border-color:var(--red); color:var(--red); background:#FFF5F7; }
+
+.main { padding:1.75rem 2rem; flex:1; }
+.banner { background:var(--primary); border-radius:18px; padding:1.6rem 2rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.75rem; overflow:hidden; position:relative; }
+.banner::before { content:''; position:absolute; width:200px; height:200px; background:rgba(255,255,255,0.07); border-radius:50%; top:-80px; right:100px; }
+.banner h2 { font-size:20px; font-weight:800; color:#fff; margin-bottom:3px; }
+.banner p { font-size:13px; color:rgba(255,255,255,0.7); }
+.nbtn { background:#fff; color:var(--primary); border:none; border-radius:10px; padding:11px 20px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:'Nunito',sans-serif; position:relative; z-index:1; transition:opacity 0.15s, transform 0.1s; }
+.nbtn:hover { opacity:0.9; }
+.nbtn:active { transform:scale(0.97); }
+.slabel { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.9rem; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
+
+.scard { background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:1.15rem; transition:border-color 0.15s, transform 0.12s; animation:up 0.3s ease; }
+.scard:hover { border-color:var(--primary); transform:translateY(-2px); }
+.scardtop { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+.scardic { width:40px; height:40px; background:var(--primary-light); border-radius:10px; display:flex; align-items:center; justify-content:center; }
+.scardic svg { width:20px; height:20px; }
+.scardbadge { font-size:11px; font-weight:700; background:var(--surface2); color:var(--text2); border-radius:20px; padding:3px 9px; border:1px solid var(--border); }
+.scard h4 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:12px; line-height:1.3; }
+.scardacts { display:flex; gap:6px; }
+.ab { flex:1; padding:7px 0; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; border:none; }
+.ab:active { opacity:0.75; transform:scale(0.96); }
+.abstud { background:var(--primary); color:#fff; }
+.abstud:hover { background:var(--primary-dark); }
+.abedit { background:var(--surface2); color:var(--primary); }
+.abedit:hover { background:var(--primary-light); }
+.abdel { background:#FFF0F3; color:var(--red); }
+.abdel:hover { background:#FFE0E7; }
+
+.empty { text-align:center; padding:3.5rem 1rem; display:none; }
+.emptyic { width:76px; height:76px; background:var(--primary-light); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; }
+.emptyic svg { width:38px; height:38px; }
+.empty h3 { font-size:19px; font-weight:800; color:var(--text); margin-bottom:6px; }
+.empty p { font-size:14px; color:var(--text2); margin-bottom:1.25rem; }
+
+/* MODAL */
+.mbg { display:none; position:fixed; inset:0; z-index:100; background:rgba(30,26,60,0.5); align-items:center; justify-content:center; padding:1rem; }
+.mbg.open { display:flex; }
+.mbox { background:var(--surface); border-radius:22px; border:1.5px solid var(--border); padding:1.75rem; width:100%; max-width:480px; max-height:88vh; overflow-y:auto; animation:up 0.25s ease; }
+.mhd { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.mhd h2 { font-size:17px; font-weight:800; color:var(--text); }
+.mcls { width:30px; height:30px; background:var(--surface2); border:none; border-radius:8px; cursor:pointer; font-size:15px; color:var(--text2); font-family:monospace; }
+.mcls:hover { background:var(--border); }
+.mf { margin-bottom:1rem; }
+.mf label { display:block; font-size:11px; font-weight:700; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em; }
+.mf input, .mf textarea { width:100%; padding:10px 13px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-family:'Nunito Sans',sans-serif; background:var(--surface); color:var(--text); transition:border-color 0.2s, box-shadow 0.2s; }
+.mf input:focus, .mf textarea:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light); }
+.mf textarea { height:185px; resize:vertical; line-height:1.7; }
+.mhint { font-size:11px; color:var(--text3); margin-top:4px; }
+.mfoot { display:flex; gap:8px; justify-content:flex-end; margin-top:1.1rem; }
+.bcnl { padding:9px 20px; background:transparent; border:1.5px solid var(--border); border-radius:10px; font-size:13px; font-weight:600; color:var(--text2); cursor:pointer; font-family:'Nunito',sans-serif; }
+.bcnl:hover { background:var(--surface2); }
+.bsav { padding:9px 24px; background:var(--primary); border:none; border-radius:10px; font-size:13px; font-weight:700; color:#fff; cursor:pointer; font-family:'Nunito',sans-serif; transition:background 0.2s; }
+.bsav:hover { background:var(--primary-dark); }
+
+/* STUDY */
+.stoptop { background:var(--surface); border-bottom:1.5px solid var(--border); padding:0 1.5rem; height:62px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:10; flex-shrink:0; }
+.bbk { padding:7px 16px; background:var(--surface2); border:none; border-radius:30px; font-size:13px; font-weight:700; color:var(--text2); cursor:pointer; font-family:'Nunito',sans-serif; transition:background 0.2s; white-space:nowrap; }
+.bbk:hover { background:var(--primary-light); color:var(--primary); }
+.stnm { font-size:14px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px; }
+.pwrap { flex:1; display:flex; align-items:center; gap:10px; }
+.pbar { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+.pfill { height:100%; background:var(--primary); border-radius:3px; transition:width 0.4s ease; }
+.ppct { font-size:13px; font-weight:700; color:var(--primary); min-width:38px; text-align:right; }
+
+.stbody { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem 1.5rem; gap:1.5rem; }
+.cscene { perspective:1400px; width:100%; max-width:540px; height:270px; cursor:pointer; flex-shrink:0; }
+.cbody { position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform 0.55s cubic-bezier(.4,0,.2,1); }
+.cbody.flip { transform:rotateY(180deg); }
+.cside { position:absolute; inset:0; backface-visibility:hidden; border-radius:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2.5rem; text-align:center; }
+.cfront { background:var(--surface); border:2px solid var(--border); }
+.cback { background:var(--primary); border:2px solid var(--primary-dark); transform:rotateY(180deg); }
+.cpill { font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; padding:4px 13px; border-radius:20px; margin-bottom:1.1rem; }
+.cfront .cpill { background:var(--primary-light); color:var(--primary); }
+.cback .cpill { background:rgba(255,255,255,0.18); color:rgba(255,255,255,0.9); }
+.cword { font-size:28px; font-weight:800; line-height:1.25; color:var(--text); font-family:'Nunito',sans-serif; }
+.cback .cword { font-size:21px; color:#fff; }
+.ctip { font-size:12px; color:var(--text3); margin-top:12px; font-weight:600; }
+.cback .ctip { color:rgba(255,255,255,0.5); }
+
+.cnav { display:flex; align-items:center; gap:10px; width:100%; max-width:540px; }
+.navb { padding:10px 22px; background:var(--surface); border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; color:var(--text); font-family:'Nunito',sans-serif; transition:all 0.15s; }
+.navb:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); background:var(--primary-light); }
+.navb:disabled { opacity:0.3; cursor:default; }
+.navc { flex:1; text-align:center; font-size:14px; font-weight:700; color:var(--text2); }
+.navsh { padding:10px 18px; background:var(--surface2); border:1.5px solid var(--border); border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; color:var(--primary); font-family:'Nunito',sans-serif; transition:background 0.15s; }
+.navsh:hover { background:var(--primary-light); }
+.donemsg { background:var(--green); color:#fff; border-radius:10px; padding:12px 24px; font-size:14px; font-weight:700; text-align:center; display:none; width:100%; max-width:540px; animation:up 0.3s ease; }
+</style>
+</head>
+<body>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+
+<div id="s-login" class="screen on">
+  <div class="lcard">
+    <div class="lwrap">
+      <div class="lbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7C6FF7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M8 4v16M2 9h6M2 14h6"/></svg>
+      </div>
+      <div class="lname">Flash<span>Cards</span></div>
+    </div>
+    <p class="lsub">შედი შენს ანგარიშზე</p>
+    <div class="lerr" id="lerr">იუზერნეიმი ან პაროლი არასწორია</div>
+    <div class="lf"><label>იუზერნეიმი</label><input type="text" id="iu" placeholder="შეიყვანე იუზერნეიმი" autocomplete="off"/></div>
+    <div class="lf"><label>პაროლი</label><input type="password" id="ip" placeholder="••••••••••••"/></div>
+    <button class="lbtn" onclick="login()">შესვლა →</button>
+    <div class="lfoot">FlashCards v2.0 · mushu-ს ანგარიში</div>
+  </div>
+</div>
+
+<div id="s-app" class="screen">
+  <div class="topbar">
+    <div class="tl">
+      <div class="tlogo"><svg viewBox="0 0 24 24" fill="none" stroke="#7C6FF7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M8 4v16M2 9h6M2 14h6"/></svg></div>
+      <div class="tname">Flash<span>Cards</span></div>
+    </div>
+    <div class="tr">
+      <div class="uchip"><div class="uav">M</div><span class="unm">mushu</span></div>
+      <button class="obtn" onclick="logout()">გასვლა</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="banner">
+      <div><h2>გამარჯობა, mushu! 👋</h2><p>შენი ნაკრებები მზადაა სასწავლად</p></div>
+      <button class="nbtn" onclick="openM()">+ ახალი ნაკრები</button>
+    </div>
+    <div class="slabel">ჩემი ნაკრებები</div>
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty">
+      <div class="emptyic"><svg viewBox="0 0 24 24" fill="none" stroke="#7C6FF7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M8 4v16M2 9h6M2 14h6"/></svg></div>
+      <h3>ჯერ ნაკრები არ გაქვს</h3>
+      <p>შექმენი პირველი ნაკრები და დაიწყე სწავლა</p>
+      <button class="nbtn" style="border-radius:12px;padding:11px 24px" onclick="openM()">+ ახალი ნაკრები</button>
+    </div>
+  </div>
+</div>
+
+<div id="s-study" class="screen">
+  <div class="stoptop">
+    <button class="bbk" onclick="goBack()">← უკან</button>
+    <span class="stnm" id="stnm"></span>
+    <div class="pwrap">
+      <div class="pbar"><div class="pfill" id="pf"></div></div>
+      <span class="ppct" id="pp"></span>
+    </div>
+  </div>
+  <div class="stbody">
+    <div class="cscene" onclick="flip()">
+      <div class="cbody" id="cb">
+        <div class="cside cfront">
+          <span class="cpill">სიტყვა</span>
+          <div class="cword" id="cw"></div>
+          <div class="ctip">დააჭირე გადასაბრუნებლად</div>
+        </div>
+        <div class="cside cback">
+          <span class="cpill">განმარტება</span>
+          <div class="cword" id="cd"></div>
+          <div class="ctip">დააჭირე გადასაბრუნებლად</div>
+        </div>
+      </div>
+    </div>
+    <div class="cnav">
+      <button class="navb" id="bp" onclick="prev()">← წინა</button>
+      <span class="navc" id="nc"></span>
+      <button class="navb" id="bn" onclick="next()">შემდეგი →</button>
+      <button class="navsh" onclick="shuf()">⇄ შეარია</button>
+    </div>
+    <div class="donemsg" id="dm">ყველა ბარათი გაიარე! კარგად გააკეთე! 🎉</div>
+  </div>
+</div>
+
+<div class="mbg" id="mbg">
+  <div class="mbox">
+    <div class="mhd"><h2 id="mh">ახალი ნაკრები</h2><button class="mcls" onclick="closeM()">✕</button></div>
+    <div class="mf"><label>ნაკრების სახელი</label><input type="text" id="mn" placeholder="მაგ: ინგლისური — A1"/></div>
+    <div class="mf">
+      <label>ბარათები</label>
+      <textarea id="mc" placeholder="ყოველ სტრიქონზე:&#10;სიტყვა - განმარტება&#10;&#10;Apple - ვაშლი&#10;House - სახლი&#10;Run - სირბილი"></textarea>
+      <div class="mhint">ფორმატი: სიტყვა - განმარტება &nbsp;|&nbsp; მაქს. 100 ბარათი</div>
+    </div>
+    <div class="mfoot">
+      <button class="bcnl" onclick="closeM()">გაუქმება</button>
+      <button class="bsav" onclick="saveS()">შენახვა</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var CREDS = {u:'mushu', p:'232569232569'};
+var SK = 'fc_v5';
+var sets = [], ei = -1, sc = [], ci = 0, fl = false;
+
+function go(id) {
+  var all = document.querySelectorAll('.screen');
+  for (var i=0; i<all.length; i++) all[i].classList.remove('on');
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+function loadData() {
+  sets = [];
+  try { var r = localStorage.getItem(SK); if(r) sets = JSON.parse(r); } catch(e) {}
+  renderSets();
+}
+function saveData() {
+  try { localStorage.setItem(SK, JSON.stringify(sets)); } catch(e) {}
+}
+
+function login() {
+  var u = document.getElementById('iu').value.trim();
+  var p = document.getElementById('ip').value;
+  var e = document.getElementById('lerr');
+  if (u === CREDS.u && p === CREDS.p) {
+    e.style.display = 'none';
+    go('s-app');
+    loadData();
+  } else {
+    e.style.display = 'block';
+    document.getElementById('ip').value = '';
+  }
+}
+document.getElementById('ip').onkeydown = function(e){ if(e.key==='Enter') login(); };
+document.getElementById('iu').onkeydown = function(e){ if(e.key==='Enter') login(); };
+
+function logout() {
+  go('s-login');
+  document.getElementById('iu').value = '';
+  document.getElementById('ip').value = '';
+}
+
+function renderSets() {
+  var g = document.getElementById('grid');
+  var e = document.getElementById('empty');
+  if (!sets.length) { g.innerHTML=''; e.style.display='block'; return; }
+  e.style.display = 'none';
+  var html = '';
+  for (var i=0; i<sets.length; i++) {
+    html += '<div class="scard">' +
+      '<div class="scardtop">' +
+        '<div class="scardic"><svg viewBox="0 0 24 24" fill="none" stroke="#7C6FF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M8 4v16"/></svg></div>' +
+        '<span class="scardbadge">' + sets[i].cards.length + ' ბარათი</span>' +
+      '</div>' +
+      '<h4>' + sets[i].name + '</h4>' +
+      '<div class="scardacts">' +
+        '<button class="ab abstud" onclick="study(' + i + ')">სწავლა</button>' +
+        '<button class="ab abedit" onclick="editS(' + i + ')">რედ.</button>' +
+        '<button class="ab abdel" onclick="delS(' + i + ')">წაშლა</button>' +
+      '</div></div>';
+  }
+  g.innerHTML = html;
+}
+
+function openM() {
+  ei = -1;
+  document.getElementById('mh').textContent = 'ახალი ნაკრები';
+  document.getElementById('mn').value = '';
+  document.getElementById('mc').value = '';
+  document.getElementById('mbg').classList.add('open');
+}
+function editS(i) {
+  ei = i;
+  document.getElementById('mh').textContent = 'ნაკრების რედაქტირება';
+  document.getElementById('mn').value = sets[i].name;
+  var txt = '';
+  for (var j=0; j<sets[i].cards.length; j++) txt += sets[i].cards[j].w + ' - ' + sets[i].cards[j].d + '\n';
+  document.getElementById('mc').value = txt.trim();
+  document.getElementById('mbg').classList.add('open');
+}
+function closeM() { document.getElementById('mbg').classList.remove('open'); }
+
+function parseC(t) {
+  var lines = t.split('\n'), res = [];
+  for (var i=0; i<lines.length; i++) {
+    var l = lines[i].trim();
+    var idx = l.indexOf(' - ');
+    if (idx < 0) continue;
+    var w = l.slice(0, idx).trim(), d = l.slice(idx+3).trim();
+    if (w && d) res.push({w:w, d:d});
+    if (res.length >= 100) break;
+  }
+  return res;
+}
+
+function saveS() {
+  var n = document.getElementById('mn').value.trim();
+  var cards = parseC(document.getElementById('mc').value);
+  if (!n) { alert('შეიყვანე სახელი'); return; }
+  if (!cards.length) { alert('ბარათები ვერ ვიპოვე.\nფორმატი: სიტყვა - განმარტება'); return; }
+  if (ei >= 0) sets[ei] = {name:n, cards:cards};
+  else sets.push({name:n, cards:cards});
+  saveData(); renderSets(); closeM();
+}
+
+function delS(i) {
+  if (!confirm('წაიშალოს "' + sets[i].name + '"?')) return;
+  sets.splice(i, 1); saveData(); renderSets();
+}
+
+function study(i) {
+  sc = [];
+  for (var j=0; j<sets[i].cards.length; j++) sc.push({w:sets[i].cards[j].w, d:sets[i].cards[j].d});
+  ci = 0; fl = false;
+  document.getElementById('stnm').textContent = sets[i].name;
+  document.getElementById('dm').style.display = 'none';
+  go('s-study');
+  showCard();
+}
+
+function goBack() { go('s-app'); }
+
+function showCard() {
+  var c = sc[ci];
+  document.getElementById('cw').textContent = c.w;
+  document.getElementById('cd').textContent = c.d;
+  document.getElementById('nc').textContent = (ci+1) + ' / ' + sc.length;
+  var pct = Math.round((ci+1)/sc.length*100);
+  document.getElementById('pf').style.width = pct + '%';
+  document.getElementById('pp').textContent = pct + '%';
+  fl = false;
+  document.getElementById('cb').classList.remove('flip');
+  document.getElementById('bp').disabled = (ci === 0);
+  document.getElementById('bn').disabled = (ci === sc.length-1);
+  document.getElementById('dm').style.display = 'none';
+}
+
+function flip() { fl = !fl; document.getElementById('cb').classList.toggle('flip', fl); }
+function next() {
+  if (ci < sc.length-1) { ci++; showCard(); }
+  else { document.getElementById('dm').style.display = 'block'; }
+}
+function prev() { if (ci > 0) { ci--; showCard(); } }
+function shuf() {
+  for (var i=sc.length-1; i>0; i--) {
+    var j = Math.floor(Math.random()*(i+1));
+    var tmp = sc[i]; sc[i] = sc[j]; sc[j] = tmp;
+  }
+  ci = 0; showCard();
+}
+</script>
+</body>
+</html>
