@@ -56,22 +56,18 @@
 #page-app.active {
   display: block;
 }
-
-#page-study.active {
-  display: flex;
-  flex-direction: column;
-}
-
-#page-login.active {
-  display: flex;
-}
-  
-  #page-study {
+#page-study {
   position: fixed;
   inset: 0;
   z-index: 9999;
   background: #f6f3ff;
+
+  display: flex;
+  flex-direction: column;
 }
+#page-study.active {
+  display: flex;
+
 
   /* ─── LOGIN ─── */
   .login-page {
